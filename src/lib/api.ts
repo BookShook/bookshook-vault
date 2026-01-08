@@ -370,7 +370,7 @@ export type AuthorSubmission = {
   reviewer_notes: string | null;
   created_at: string;
   updated_at: string;
-  // Joined fields from GET /api/author/submissions
+  // Joined fields from GET /api/vault/author/submissions
   category?: string;
   slug?: string;
   name?: string;
@@ -384,7 +384,7 @@ export type AuthorSubmissionsResponse = {
 // ───────────────────────────── Author Portal Fetchers ─────────────────────────────
 
 export async function authorLogin(token: string): Promise<AuthorLoginResponse> {
-  const res = await fetch(`${API_BASE}/api/author/login`, {
+  const res = await fetch(`${API_BASE}/api/vault/author/login`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -401,14 +401,14 @@ export async function authorLogin(token: string): Promise<AuthorLoginResponse> {
 }
 
 export async function authorLogout(): Promise<void> {
-  await fetch(`${API_BASE}/api/author/logout`, {
+  await fetch(`${API_BASE}/api/vault/author/logout`, {
     method: "POST",
     credentials: "include",
   });
 }
 
 export async function getAuthorMe(): Promise<AuthorMeResponse> {
-  const res = await fetch(`${API_BASE}/api/author/me`, {
+  const res = await fetch(`${API_BASE}/api/vault/author/me`, {
     method: "GET",
     credentials: "include",
     headers: { accept: "application/json" },
@@ -425,7 +425,7 @@ export async function getAuthorMe(): Promise<AuthorMeResponse> {
 }
 
 export async function getAuthorBooks(): Promise<AuthorBooksResponse> {
-  const res = await fetch(`${API_BASE}/api/author/books`, {
+  const res = await fetch(`${API_BASE}/api/vault/author/books`, {
     method: "GET",
     credentials: "include",
     headers: { accept: "application/json" },
@@ -443,7 +443,7 @@ export async function submitAuthorTag(
   evidence: SubmissionEvidence,
   csrfToken: string
 ): Promise<{ item: AuthorSubmission }> {
-  const res = await fetch(`${API_BASE}/api/author/submissions`, {
+  const res = await fetch(`${API_BASE}/api/vault/author/submissions`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -467,7 +467,7 @@ export type GetAuthorSubmissionsParams = {
 export async function getAuthorSubmissions(
   params: GetAuthorSubmissionsParams = {}
 ): Promise<AuthorSubmissionsResponse> {
-  const url = new URL(`${API_BASE}/api/author/submissions`, window.location.origin);
+  const url = new URL(`${API_BASE}/api/vault/author/submissions`, window.location.origin);
   if (params.status) url.searchParams.set("status", params.status);
 
   const res = await fetch(url.toString(), {
@@ -545,7 +545,7 @@ export type AdminProposalsResponse = {
 // ───────────────────────────── Admin Portal Fetchers ─────────────────────────────
 
 export async function adminLogin(password: string): Promise<AdminLoginResponse> {
-  const res = await fetch(`${API_BASE}/api/admin/login`, {
+  const res = await fetch(`${API_BASE}/api/vault/admin/login`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -562,7 +562,7 @@ export async function adminLogin(password: string): Promise<AdminLoginResponse> 
 }
 
 export async function adminLogout(): Promise<void> {
-  await fetch(`${API_BASE}/api/admin/logout`, {
+  await fetch(`${API_BASE}/api/vault/admin/logout`, {
     method: "POST",
     credentials: "include",
   });
@@ -575,7 +575,7 @@ export type GetAdminSubmissionsParams = {
 export async function getAdminSubmissions(
   params: GetAdminSubmissionsParams = {}
 ): Promise<AdminSubmissionsResponse> {
-  const url = new URL(`${API_BASE}/api/admin/author-submissions`, window.location.origin);
+  const url = new URL(`${API_BASE}/api/vault/admin/author-submissions`, window.location.origin);
   if (params.status) url.searchParams.set("status", params.status);
 
   const res = await fetch(url.toString(), {
@@ -596,7 +596,7 @@ export async function decideSubmission(
   csrfToken: string,
   reviewerNotes?: string
 ): Promise<{ ok: boolean; status: string }> {
-  const res = await fetch(`${API_BASE}/api/admin/author-submissions/${submissionId}/decide`, {
+  const res = await fetch(`${API_BASE}/api/vault/admin/author-submissions/${submissionId}/decide`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -620,7 +620,7 @@ export type GetAdminProposalsParams = {
 export async function getAdminProposals(
   params: GetAdminProposalsParams = {}
 ): Promise<AdminProposalsResponse> {
-  const url = new URL(`${API_BASE}/api/admin/proposals`, window.location.origin);
+  const url = new URL(`${API_BASE}/api/vault/admin/proposals`, window.location.origin);
   if (params.status) url.searchParams.set("status", params.status);
 
   const res = await fetch(url.toString(), {
@@ -641,7 +641,7 @@ export async function decideProposal(
   csrfToken: string,
   rejectionReason?: string
 ): Promise<{ ok: boolean; status: string }> {
-  const res = await fetch(`${API_BASE}/api/admin/proposals/${proposalId}/decide`, {
+  const res = await fetch(`${API_BASE}/api/vault/admin/proposals/${proposalId}/decide`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -664,7 +664,7 @@ export async function createAuthorInvite(
   csrfToken: string,
   displayName?: string
 ): Promise<{ token: string; expires_hours: number; author_account_id: string }> {
-  const res = await fetch(`${API_BASE}/api/admin/authors/invite`, {
+  const res = await fetch(`${API_BASE}/api/vault/admin/authors/invite`, {
     method: "POST",
     credentials: "include",
     headers: {
