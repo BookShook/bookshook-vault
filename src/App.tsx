@@ -5,10 +5,15 @@ import { AdminProvider } from "./auth/AdminContext";
 import Layout from "./components/Layout";
 import { AuthorLayout } from "./components/author/AuthorLayout";
 import { AdminLayout } from "./components/admin/AdminLayout";
+import TheDoor from "./pages/TheDoor";
 import BooksPage from "./pages/BooksPage";
 import BookDetailPage from "./pages/BookDetailPage";
 import LibraryPage from "./pages/LibraryPage";
 import RecommendationsPage from "./pages/RecommendationsPage";
+import CollectionsPage from "./pages/CollectionsPage";
+import FridayPickPage from "./pages/FridayPickPage";
+import MembershipPage from "./pages/MembershipPage";
+import AboutPage from "./pages/AboutPage";
 import { AuthorLoginPage } from "./pages/author/AuthorLoginPage";
 import { AuthorDashboard } from "./pages/author/AuthorDashboard";
 import { AuthorBookDetail } from "./pages/author/AuthorBookDetail";
@@ -62,18 +67,22 @@ function AdminRoutes() {
 function MainRoutes() {
   return (
     <MeProvider>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Navigate to="/books" replace />} />
-          <Route path="/books" element={<BooksPage />} />
-          <Route path="/books/:slug" element={<BookDetailPage />} />
-          <Route path="/collections" element={<div style={{ padding: 24 }}>Collections coming soon</div>} />
-          <Route path="/collections/:slug" element={<div style={{ padding: 24 }}>Collection detail coming soon</div>} />
-          <Route path="/my/library" element={<LibraryPage />} />
-          <Route path="/recommendations" element={<RecommendationsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        {/* The Door - Landing page without Layout */}
+        <Route path="/" element={<TheDoor />} />
+
+        {/* Pages with Layout */}
+        <Route path="/books" element={<Layout><BooksPage /></Layout>} />
+        <Route path="/books/:slug" element={<Layout><BookDetailPage /></Layout>} />
+        <Route path="/collections" element={<Layout><CollectionsPage /></Layout>} />
+        <Route path="/collections/:slug" element={<Layout><div style={{ padding: 24 }}>Collection detail coming soon</div></Layout>} />
+        <Route path="/my/library" element={<Layout><LibraryPage /></Layout>} />
+        <Route path="/recommendations" element={<Layout><RecommendationsPage /></Layout>} />
+        <Route path="/friday-pick" element={<Layout><FridayPickPage /></Layout>} />
+        <Route path="/membership" element={<Layout><MembershipPage /></Layout>} />
+        <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+        <Route path="*" element={<Layout><NotFound /></Layout>} />
+      </Routes>
     </MeProvider>
   );
 }

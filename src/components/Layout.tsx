@@ -1,68 +1,152 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
+import { BookOpen, Flame, User, Menu, X } from "lucide-react";
+import { useState } from "react";
 import AccountPill from "./AccountPill";
 
-const navLinkStyle: React.CSSProperties = {
-  textDecoration: "none",
-  color: "inherit",
-  padding: "4px 8px",
-  borderRadius: 6,
-  fontSize: 14,
-};
-
-const navLinkActiveStyle: React.CSSProperties = {
-  ...navLinkStyle,
-  fontWeight: 600,
-  background: "rgba(0,0,0,.06)",
-};
-
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
-      <header
-        style={{
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          marginBottom: 16,
-          paddingBottom: 12,
-          borderBottom: "1px solid rgba(0,0,0,.08)",
-        }}
-      >
-        <div style={{ fontWeight: 900, fontSize: 20 }}>BookShook Vault</div>
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-        <nav style={{ display: "flex", gap: 8, alignItems: "center" }}>
+  return (
+    <div className="vault-layout">
+      {/* Floating Navigation */}
+      <header className="vault-nav">
+        <Link to="/" className="vault-nav__logo">
+          <span className="vault-nav__logo-text">BookShook</span>
+        </Link>
+
+        <nav className="vault-nav__links">
           <NavLink
             to="/books"
-            style={({ isActive }) => (isActive ? navLinkActiveStyle : navLinkStyle)}
+            className={({ isActive }) =>
+              `vault-nav__link ${isActive ? "vault-nav__link--active" : ""}`
+            }
           >
-            Books
+            The Vault
           </NavLink>
           <NavLink
             to="/collections"
-            style={({ isActive }) => (isActive ? navLinkActiveStyle : navLinkStyle)}
+            className={({ isActive }) =>
+              `vault-nav__link ${isActive ? "vault-nav__link--active" : ""}`
+            }
           >
             Collections
           </NavLink>
           <NavLink
-            to="/recommendations"
-            style={({ isActive }) => (isActive ? navLinkActiveStyle : navLinkStyle)}
+            to="/friday-pick"
+            className={({ isActive }) =>
+              `vault-nav__link ${isActive ? "vault-nav__link--active" : ""}`
+            }
           >
-            Recommendations
+            Friday Pick
           </NavLink>
           <NavLink
             to="/my/library"
-            style={({ isActive }) => (isActive ? navLinkActiveStyle : navLinkStyle)}
+            className={({ isActive }) =>
+              `vault-nav__link ${isActive ? "vault-nav__link--active" : ""}`
+            }
           >
             My Library
           </NavLink>
         </nav>
 
-        <AccountPill />
+        <div className="vault-nav__actions">
+          <AccountPill />
+          <button
+            className="vault-nav__mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </header>
 
-      <main>{children}</main>
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="vault-nav__mobile-menu">
+          <NavLink
+            to="/books"
+            className="vault-nav__mobile-link"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            The Vault
+          </NavLink>
+          <NavLink
+            to="/collections"
+            className="vault-nav__mobile-link"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Collections
+          </NavLink>
+          <NavLink
+            to="/friday-pick"
+            className="vault-nav__mobile-link"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Friday Pick
+          </NavLink>
+          <NavLink
+            to="/my/library"
+            className="vault-nav__mobile-link"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            My Library
+          </NavLink>
+          <NavLink
+            to="/membership"
+            className="vault-nav__mobile-link"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Membership
+          </NavLink>
+          <NavLink
+            to="/about"
+            className="vault-nav__mobile-link"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            About
+          </NavLink>
+        </div>
+      )}
+
+      <main className="vault-main">{children}</main>
+
+      {/* Footer */}
+      <footer className="vault-footer">
+        <div className="vault-footer__content">
+          <div className="vault-footer__brand">
+            <span className="vault-footer__logo">BookShook</span>
+            <p className="vault-footer__tagline">
+              350 books a year so you never waste a night.
+            </p>
+          </div>
+
+          <nav className="vault-footer__nav">
+            <div className="vault-footer__col">
+              <h4 className="vault-footer__heading">Explore</h4>
+              <Link to="/books" className="vault-footer__link">The Vault</Link>
+              <Link to="/collections" className="vault-footer__link">Collections</Link>
+              <Link to="/friday-pick" className="vault-footer__link">Friday Pick</Link>
+            </div>
+            <div className="vault-footer__col">
+              <h4 className="vault-footer__heading">Account</h4>
+              <Link to="/my/library" className="vault-footer__link">My Library</Link>
+              <Link to="/membership" className="vault-footer__link">Membership</Link>
+            </div>
+            <div className="vault-footer__col">
+              <h4 className="vault-footer__heading">About</h4>
+              <Link to="/about" className="vault-footer__link">The Founder</Link>
+              <a href="mailto:shook@bookshook.com" className="vault-footer__link">Contact</a>
+            </div>
+          </nav>
+        </div>
+
+        <div className="vault-footer__bottom">
+          <p className="vault-footer__copyright">
+            &copy; {new Date().getFullYear()} BookShook. Made with <Flame size={14} className="vault-footer__flame" /> in the vault.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
