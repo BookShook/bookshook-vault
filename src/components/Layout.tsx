@@ -34,13 +34,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         <nav style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <NavLink
-            to="/"
-            end
-            style={({ isActive }) => (isActive ? navLinkActiveStyle : navLinkStyle)}
-          >
-            Home
-          </NavLink>
-          <NavLink
             to="/books"
             style={({ isActive }) => (isActive ? navLinkActiveStyle : navLinkStyle)}
           >
