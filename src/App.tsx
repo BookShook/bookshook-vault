@@ -1,5 +1,5 @@
-import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { MeProvider, useMe } from "./auth/MeContext";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { MeProvider } from "./auth/MeContext";
 import { AuthorProvider } from "./auth/AuthorContext";
 import { AdminProvider } from "./auth/AdminContext";
 import Layout from "./components/Layout";
@@ -18,63 +18,16 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminSubmissions } from "./pages/admin/AdminSubmissions";
 import { AdminProposals } from "./pages/admin/AdminProposals";
 
-function Card({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ border: "1px solid rgba(0,0,0,.12)", borderRadius: 16, padding: 16, background: "#fff" }}>
-      {children}
-    </div>
-  );
-}
-
-function Home() {
-  const { me, isLoading, isAuthenticated, isPaid } = useMe();
-
-  return (
-    <Card>
-      <div style={{ fontWeight: 900, fontSize: 18, marginBottom: 8 }}>Vault (React)</div>
-      <div style={{ opacity: 0.8, marginBottom: 12 }}>
-        Welcome to your BookShook Vault. Browse your library below.
-      </div>
-
-      <div style={{ fontWeight: 800, marginBottom: 8 }}>/api/me</div>
-      <pre style={{ padding: 12, borderRadius: 12, background: "rgba(0,0,0,.05)", overflow: "auto" }}>
-        {isLoading ? "Loading..." : JSON.stringify(me, null, 2)}
-      </pre>
-
-      {isAuthenticated && me && me.isAuthenticated && (
-        <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span style={pillStyle}>member: {me.ghostMemberId}</span>
-          <span style={pillStyle}>paid: {isPaid ? "yes" : "no"}</span>
-          <span style={pillStyle}>tiers: {me.tiers.length}</span>
-        </div>
-      )}
-
-      <div style={{ marginTop: 16 }}>
-        <Link to="/books" style={{ fontWeight: 600, color: "#000" }}>
-          Browse Books
-        </Link>
-      </div>
-    </Card>
-  );
-}
 
 function NotFound() {
   const loc = useLocation();
   return (
-    <Card>
+    <div style={{ padding: 24, textAlign: "center" }}>
       <div style={{ fontWeight: 900, fontSize: 18, marginBottom: 8 }}>Not Found</div>
       <div style={{ opacity: 0.8 }}>No route for: {loc.pathname}</div>
-    </Card>
+    </div>
   );
 }
-
-const pillStyle: React.CSSProperties = {
-  display: "inline-block",
-  padding: "4px 10px",
-  borderRadius: 999,
-  border: "1px solid rgba(0,0,0,.12)",
-  fontSize: 12,
-};
 
 function AuthorRoutes() {
   return (
@@ -111,7 +64,7 @@ function MainRoutes() {
     <MeProvider>
       <Layout>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Navigate to="/books" replace />} />
           <Route path="/books" element={<BooksPage />} />
           <Route path="/books/:slug" element={<BookDetailPage />} />
           <Route path="/collections" element={<div style={{ padding: 24 }}>Collections coming soon</div>} />
