@@ -1,3 +1,5 @@
-# SPA routing - serve index.html for all paths
+# Redirect root to /vault/
+/ /vault/ 302
+
+# SPA routing - all vault routes serve index.html
 /vault/* /index.html 200
-/* /index.html 200
