@@ -50,21 +50,21 @@ export default function LibraryPage() {
         style={{
           padding: 32,
           textAlign: "center",
-          border: "1px solid rgba(0,0,0,.1)",
+          border: "1px solid rgba(255,255,255,.1)",
           borderRadius: 12,
-          background: "#fff",
+          background: "rgba(30,30,40,0.8)",
         }}
       >
-        <h2 style={{ marginBottom: 12 }}>My Library</h2>
-        <p style={{ marginBottom: 16, opacity: 0.7 }}>Sign in to view your saved books.</p>
+        <h2 style={{ marginBottom: 12, color: "#f5f0e8" }}>My Library</h2>
+        <p style={{ marginBottom: 16, opacity: 0.7, color: "#f5f0e8" }}>Sign in to view your saved books.</p>
         <button
           onClick={requireAuth}
           style={{
             padding: "10px 20px",
             borderRadius: 8,
             border: "none",
-            background: "#000",
-            color: "#fff",
+            background: "#d4af37",
+            color: "#0a0a0f",
             fontWeight: 600,
             cursor: "pointer",
           }}
@@ -81,21 +81,21 @@ export default function LibraryPage() {
         style={{
           padding: 32,
           textAlign: "center",
-          border: "1px solid rgba(0,0,0,.1)",
+          border: "1px solid rgba(255,255,255,.1)",
           borderRadius: 12,
-          background: "#fff",
+          background: "rgba(30,30,40,0.8)",
         }}
       >
-        <h2 style={{ marginBottom: 12 }}>My Library</h2>
-        <p style={{ marginBottom: 16, opacity: 0.7 }}>This is a Premium feature.</p>
+        <h2 style={{ marginBottom: 12, color: "#f5f0e8" }}>My Library</h2>
+        <p style={{ marginBottom: 16, opacity: 0.7, color: "#f5f0e8" }}>This is a Premium feature.</p>
         <button
           onClick={requirePaid}
           style={{
             padding: "10px 20px",
             borderRadius: 8,
             border: "none",
-            background: "#000",
-            color: "#fff",
+            background: "#d4af37",
+            color: "#0a0a0f",
             fontWeight: 600,
             cursor: "pointer",
           }}
@@ -118,10 +118,10 @@ export default function LibraryPage() {
           alignItems: "center",
         }}
       >
-        <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0 }}>My Library</h2>
+        <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, color: "#f5f0e8" }}>My Library</h2>
 
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <label style={{ fontSize: 13 }}>
+          <label style={{ fontSize: 13, color: "#f5f0e8" }}>
             Filter:
             <select
               value={filter}
@@ -133,7 +133,9 @@ export default function LibraryPage() {
                 marginLeft: 8,
                 padding: "4px 8px",
                 borderRadius: 6,
-                border: "1px solid rgba(0,0,0,.15)",
+                border: "1px solid rgba(255,255,255,.15)",
+                background: "rgba(30,30,40,0.8)",
+                color: "#f5f0e8",
               }}
             >
               <option value="all">All</option>
@@ -146,7 +148,7 @@ export default function LibraryPage() {
       </div>
 
       {err && (
-        <div style={{ padding: 16, background: "#fee", borderRadius: 8, color: "#c00", marginBottom: 16 }}>
+        <div style={{ padding: 16, background: "rgba(200,50,50,0.2)", borderRadius: 8, color: "#ff6b6b", marginBottom: 16, border: "1px solid rgba(200,50,50,0.3)" }}>
           {err}
         </div>
       )}
@@ -189,15 +191,16 @@ export default function LibraryPage() {
                 style={{
                   padding: "6px 12px",
                   borderRadius: 6,
-                  border: "1px solid rgba(0,0,0,.15)",
-                  background: "#fff",
+                  border: "1px solid rgba(255,255,255,.15)",
+                  background: "rgba(30,30,40,0.8)",
+                  color: "#f5f0e8",
                   cursor: page <= 1 ? "not-allowed" : "pointer",
                   opacity: page <= 1 ? 0.5 : 1,
                 }}
               >
                 Prev
               </button>
-              <span style={{ padding: "6px 12px", fontSize: 14 }}>
+              <span style={{ padding: "6px 12px", fontSize: 14, color: "#f5f0e8" }}>
                 Page {data.page} / {data.totalPages}
               </span>
               <button
@@ -206,8 +209,9 @@ export default function LibraryPage() {
                 style={{
                   padding: "6px 12px",
                   borderRadius: 6,
-                  border: "1px solid rgba(0,0,0,.15)",
-                  background: "#fff",
+                  border: "1px solid rgba(255,255,255,.15)",
+                  background: "rgba(30,30,40,0.8)",
+                  color: "#f5f0e8",
                   cursor: page >= data.totalPages ? "not-allowed" : "pointer",
                   opacity: page >= data.totalPages ? 0.5 : 1,
                 }}

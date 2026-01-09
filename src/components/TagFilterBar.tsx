@@ -25,14 +25,14 @@ export default function TagFilterBar({ selectedTags, onTagsChange }: Props) {
     }
   }
 
-  if (loading) return <div style={{ opacity: 0.6, fontSize: 14 }}>Loading filters…</div>;
+  if (loading) return <div style={{ opacity: 0.6, fontSize: 14, color: "#f5f0e8" }}>Loading filters…</div>;
   if (categories.length === 0) return null;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       {categories.map((cat) => (
         <div key={cat.category}>
-          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6, textTransform: "capitalize" }}>
+          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6, textTransform: "capitalize", color: "#f5f0e8" }}>
             {cat.category.replace(/_/g, " ")}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -45,9 +45,9 @@ export default function TagFilterBar({ selectedTags, onTagsChange }: Props) {
                   style={{
                     padding: "4px 10px",
                     borderRadius: 999,
-                    border: isActive ? "1px solid #000" : "1px solid rgba(0,0,0,.15)",
-                    background: isActive ? "#000" : "#fff",
-                    color: isActive ? "#fff" : "#000",
+                    border: isActive ? "1px solid #d4af37" : "1px solid rgba(255,255,255,.18)",
+                    background: isActive ? "#d4af37" : "rgba(255,255,255,0.1)",
+                    color: isActive ? "#0a0a0f" : "#f5f0e8",
                     fontSize: 12,
                     cursor: "pointer",
                   }}
@@ -67,8 +67,9 @@ export default function TagFilterBar({ selectedTags, onTagsChange }: Props) {
             alignSelf: "flex-start",
             padding: "4px 10px",
             borderRadius: 999,
-            border: "1px solid rgba(0,0,0,.15)",
-            background: "#fff",
+            border: "1px solid rgba(255,255,255,.18)",
+            background: "rgba(255,255,255,0.1)",
+            color: "#f5f0e8",
             fontSize: 12,
             cursor: "pointer",
           }}

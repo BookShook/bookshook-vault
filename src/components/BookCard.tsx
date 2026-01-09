@@ -13,9 +13,10 @@ function TagPill({ name }: { name: string }) {
         fontSize: 10,
         padding: "2px 6px",
         borderRadius: 999,
-        border: "1px solid rgba(0,0,0,.12)",
-        background: "rgba(0,0,0,.03)",
+        border: "1px solid rgba(255,255,255,.15)",
+        background: "rgba(255,255,255,.08)",
         whiteSpace: "nowrap",
+        color: "#f5f0e8",
       }}
     >
       {name}
@@ -27,15 +28,15 @@ export default function BookCard({ book }: Props) {
   return (
     <div
       style={{
-        border: "1px solid rgba(0,0,0,.1)",
+        border: "1px solid rgba(255,255,255,.1)",
         borderRadius: 12,
         overflow: "hidden",
-        background: "white",
+        background: "rgba(30,30,40,0.8)",
         transition: "box-shadow 160ms ease, transform 160ms ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,.10)";
-        e.currentTarget.style.transform = "translateY(-1px)";
+        e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,.4)";
+        e.currentTarget.style.transform = "translateY(-4px)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = "none";
@@ -56,7 +57,7 @@ export default function BookCard({ book }: Props) {
             aspectRatio: "2/3",
             background: book.coverUrl
               ? `url(${book.coverUrl}) center/cover`
-              : "linear-gradient(135deg, #e0e0e0, #f5f5f5)",
+              : "linear-gradient(135deg, #2a1f4e, #1a1a2e)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -66,12 +67,12 @@ export default function BookCard({ book }: Props) {
         </div>
 
         <div style={{ padding: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, lineHeight: 1.3 }}>
+          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, lineHeight: 1.3, color: "#f5f0e8" }}>
             {book.title}
           </div>
 
           {book.authors?.length > 0 && (
-            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>
+            <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6, color: "#f5f0e8" }}>
               {book.authors.map((a) => a.name).join(", ")}
             </div>
           )}
@@ -82,7 +83,7 @@ export default function BookCard({ book }: Props) {
                 <TagPill key={tag.id} name={tag.name} />
               ))}
               {book.tags.length > 3 && (
-                <span style={{ fontSize: 10, opacity: 0.5 }}>+{book.tags.length - 3}</span>
+                <span style={{ fontSize: 10, opacity: 0.5, color: "#f5f0e8" }}>+{book.tags.length - 3}</span>
               )}
             </div>
           )}
@@ -92,7 +93,7 @@ export default function BookCard({ book }: Props) {
       {/* Action area (NOT inside the Link, so clicks won't navigate) */}
       <div
         style={{
-          borderTop: "1px solid rgba(0,0,0,.08)",
+          borderTop: "1px solid rgba(255,255,255,.08)",
           padding: "10px 12px",
         }}
         onClick={(e) => e.stopPropagation()}
