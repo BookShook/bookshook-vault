@@ -7,6 +7,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useMe } from '../auth/MeContext';
 import { getVaultTags, getBooks, type VaultTag, type VaultTagCategory, type VaultTagsResponse, type BookListItem } from '../lib/api';
+import { ShareModal } from '../components/ShareModal';
 
 // ============================================================================
 // TYPES
@@ -546,6 +547,7 @@ export default function BooksPage() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // Books state
   const [books, setBooks] = useState<BookListItem[]>([]);
@@ -939,6 +941,15 @@ export default function BooksPage() {
               <option value="regret_low">Reader Regret (Low)</option>
               <option value="heat">Heat Level</option>
             </select>
+            {totalActive > 0 && (
+              <button
+                type="button"
+                className="vault-results__share"
+                onClick={() => setShowShareModal(true)}
+              >
+                Share
+              </button>
+            )}
           </div>
 
           <div className="vault-grid">
@@ -959,9 +970,19 @@ export default function BooksPage() {
             ) : (
               <div className="vault-empty">
                 <p>No books found matching your filters.</p>
-                <button onClick={clearAll} className="vault-empty__clear">
-                  Clear all filters
-                </button>
+                <div className="vault-empty__actions">
+                  <button onClick={clearAll} className="vault-empty__clear">
+                    Clear all filters
+                  </button>
+                  {totalActive > 0 && (
+                    <button
+                      onClick={() => setShowShareModal(true)}
+                      className="vault-empty__share"
+                    >
+                      Share this search
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -1009,6 +1030,15 @@ export default function BooksPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <ShareModal
+          filters={filters}
+          tagById={tagById}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
     </div>
   );
