@@ -435,6 +435,8 @@ interface ActiveFiltersBarProps {
 }
 
 function ActiveFiltersBar({ filters, tagById, onRemove, onClear }: ActiveFiltersBarProps) {
+  const [expanded, setExpanded] = useState(false);
+
   const allActive = [
     ...filters.include.map((id) => ({ id, type: 'include' as const })),
     ...filters.exclude.map((id) => ({ id, type: 'exclude' as const })),
@@ -443,18 +445,26 @@ function ActiveFiltersBar({ filters, tagById, onRemove, onClear }: ActiveFilters
 
   if (allActive.length === 0) return null;
 
+  const COLLAPSED_LIMIT = 6;
+  const displayTags = expanded ? allActive : allActive.slice(0, COLLAPSED_LIMIT);
+  const hasMore = allActive.length > COLLAPSED_LIMIT;
+
   return (
-    <div className="vault-active">
-      <span className="vault-active__label">Active ({allActive.length})</span>
+    <div className={`vault-active ${expanded ? 'vault-active--expanded' : ''}`}>
+      <div className="vault-active__header">
+        <span className="vault-active__label">Active ({allActive.length})</span>
+        <button onClick={onClear} className="vault-active__clear">Clear All</button>
+      </div>
       <div className="vault-active__tags">
-        {allActive.slice(0, 8).map(({ id, type }) => {
+        {displayTags.map(({ id, type }) => {
           const tag = tagById.get(id);
           if (!tag) return null;
           return (
             <span
               key={id}
-              className={`vault-active__tag ${type === 'exclude' ? 'vault-active__tag--exclude' : ''}`}
+              className={`vault-active__tag ${type === 'exclude' ? 'vault-active__tag--exclude' : ''} ${type === 'safety' ? 'vault-active__tag--safety' : ''}`}
             >
+              {type === 'exclude' && <span className="vault-active__prefix">NOT</span>}
               {tag.display_name}
               <button onClick={() => onRemove(id, type)} className="vault-active__remove">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -465,11 +475,17 @@ function ActiveFiltersBar({ filters, tagById, onRemove, onClear }: ActiveFilters
             </span>
           );
         })}
-        {allActive.length > 8 && (
-          <span className="vault-active__more">+{allActive.length - 8}</span>
+        {hasMore && !expanded && (
+          <button className="vault-active__expand" onClick={() => setExpanded(true)}>
+            +{allActive.length - COLLAPSED_LIMIT} more
+          </button>
+        )}
+        {hasMore && expanded && (
+          <button className="vault-active__expand" onClick={() => setExpanded(false)}>
+            Show less
+          </button>
         )}
       </div>
-      <button onClick={onClear} className="vault-active__clear">Clear All</button>
     </div>
   );
 }
@@ -514,9 +530,15 @@ function ContentWarningSection({ tags, selectedIds, onToggle, isPremiumUser }: C
 
 interface BookCardProps {
   book: BookListItem;
+  showTags?: boolean;
 }
 
-function BookCard({ book }: BookCardProps) {
+function BookCard({ book, showTags = true }: BookCardProps) {
+  // Show up to 3 most relevant tags (exclude warnings)
+  const displayTags = book.tags
+    .filter(t => t.category !== 'content_warning')
+    .slice(0, 3);
+
   return (
     <Link to={`/books/${book.slug}`} className="vault-card">
       <div
@@ -528,8 +550,27 @@ function BookCard({ book }: BookCardProps) {
         <p className="vault-card__author">
           {book.authors.map(a => a.name).join(', ') || 'Unknown Author'}
         </p>
+        {showTags && displayTags.length > 0 && (
+          <div className="vault-card__tags">
+            {displayTags.map(tag => (
+              <span key={tag.id} className="vault-card__tag">{tag.name}</span>
+            ))}
+          </div>
+        )}
       </div>
     </Link>
+  );
+}
+
+function BookCardSkeleton() {
+  return (
+    <div className="vault-card vault-card--skeleton">
+      <div className="vault-card__cover vault-card__cover--skeleton" />
+      <div className="vault-card__info">
+        <div className="vault-card__title--skeleton" />
+        <div className="vault-card__author--skeleton" />
+      </div>
+    </div>
   );
 }
 
@@ -552,7 +593,20 @@ export default function BooksPage() {
   // Books state
   const [books, setBooks] = useState<BookListItem[]>([]);
   const [booksLoading, setBooksLoading] = useState(true);
+  const [booksError, setBooksError] = useState<string | null>(null);
   const [totalBooks, setTotalBooks] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Notify me state
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifySuccess, setNotifySuccess] = useState(false);
+  const [notifyError, setNotifyError] = useState<string | null>(null);
+
+  // Search pending indicator
+  const [searchPending, setSearchPending] = useState(false);
 
   // Handle premium click - show modal on standalone, use Ghost portal on bookshook.com
   const handlePremiumClick = useCallback(() => {
@@ -566,39 +620,76 @@ export default function BooksPage() {
   // Debounced search
   const [searchInput, setSearchInput] = useState(filters.query);
   useEffect(() => {
+    if (searchInput !== filters.query) {
+      setSearchPending(true);
+    }
     const timeout = setTimeout(() => {
       if (searchInput !== filters.query) {
         setFilters({ query: searchInput });
+        setSearchPending(false);
       }
     }, 300);
     return () => clearTimeout(timeout);
   }, [searchInput, filters.query, setFilters]);
 
-  // Fetch books when filters change
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters.query, filters.include, filters.exclude, filters.safety, filters.sort]);
+
+  // Fetch books when filters or page change
   useEffect(() => {
     setBooksLoading(true);
+    setBooksError(null);
+
     // Convert tag IDs to slugs for API
-    const tagSlugs: string[] = [];
+    const includeSlugs: string[] = [];
     filters.include.forEach(id => {
       const tag = tagById.get(id);
-      if (tag) tagSlugs.push(tag.slug);
+      if (tag) includeSlugs.push(tag.slug);
+    });
+
+    const excludeSlugs: string[] = [];
+    filters.exclude.forEach(id => {
+      const tag = tagById.get(id);
+      if (tag) excludeSlugs.push(tag.slug);
+    });
+
+    // Safety shields map to derived flags
+    const dfFlags: string[] = [];
+    filters.safety.forEach(id => {
+      const tag = tagById.get(id);
+      if (tag) {
+        // Map safety tag slugs to df flags
+        if (tag.slug === 'guaranteed_hea') dfFlags.push('hea');
+        else if (tag.slug === 'no_cheating') dfFlags.push('noCheating');
+        else if (tag.slug === 'no_cliffhanger') dfFlags.push('noCliffhanger');
+        else if (tag.slug === 'no_love_triangle') dfFlags.push('noLoveTriangle');
+        else if (tag.slug === 'low_angst') dfFlags.push('lowAngst');
+        else dfFlags.push(tag.slug); // fallback
+      }
     });
 
     getBooks({
       q: filters.query || undefined,
-      tags: tagSlugs.length > 0 ? tagSlugs : undefined,
-      page: 1,
+      tags: includeSlugs.length > 0 ? includeSlugs : undefined,
+      excludeTags: excludeSlugs.length > 0 ? excludeSlugs : undefined,
+      df: dfFlags.length > 0 ? dfFlags : undefined,
+      sort: filters.sort !== 'newest' ? filters.sort : undefined,
+      page: currentPage,
       pageSize: 24,
     })
       .then((res) => {
         setBooks(res.items);
         setTotalBooks(res.total);
+        setTotalPages(res.totalPages);
         setBooksLoading(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        setBooksError(err.message || 'Failed to load books');
         setBooksLoading(false);
       });
-  }, [filters.query, filters.include, filters.exclude, filters.safety, tagById]);
+  }, [filters.query, filters.include, filters.exclude, filters.safety, filters.sort, currentPage, tagById]);
 
   // Count filters in category
   const countCategoryFilters = useCallback((categorySlug: string) => {
@@ -926,22 +1017,24 @@ export default function BooksPage() {
           <div className="vault-results__header">
             <span className="vault-results__count">
               {booksLoading ? (
-                'Loading...'
+                <span className="vault-results__loading">Searching...</span>
+              ) : booksError ? (
+                <span className="vault-results__error">Error loading results</span>
               ) : (
-                <><strong>{totalBooks}</strong> books found</>
+                <><strong>{totalBooks.toLocaleString()}</strong> books found</>
               )}
+              {searchPending && <span className="vault-results__pending" />}
             </span>
-            <select
-              value={filters.sort}
-              onChange={(e) => setFilters({ sort: e.target.value as FilterState['sort'] })}
-              className="vault-results__sort"
-            >
-              <option value="newest">Newest</option>
-              <option value="grovel">Grovel Index</option>
-              <option value="regret_low">Reader Regret (Low)</option>
-              <option value="heat">Heat Level</option>
-            </select>
-            {totalActive > 0 && (
+            <div className="vault-results__actions">
+              <select
+                value={filters.sort}
+                onChange={(e) => setFilters({ sort: e.target.value as FilterState['sort'] })}
+                className="vault-results__sort"
+              >
+                <option value="newest">Newest</option>
+                <option value="recommended">Recommended</option>
+                <option value="title">Title (A-Z)</option>
+              </select>
               <button
                 type="button"
                 className="vault-results__share"
@@ -949,45 +1042,196 @@ export default function BooksPage() {
               >
                 Share
               </button>
-            )}
+            </div>
           </div>
 
+          {/* Error State */}
+          {booksError && !booksLoading && (
+            <div className="vault-error-state">
+              <p>Something went wrong loading books.</p>
+              <button onClick={() => setCurrentPage(1)} className="vault-error-state__retry">
+                Try again
+              </button>
+            </div>
+          )}
+
+          {/* Results Grid */}
           <div className="vault-grid">
             {booksLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="vault-card vault-card--loading">
-                  <div className="vault-card__cover" />
-                  <div className="vault-card__info">
-                    <div className="vault-card__title">Loading...</div>
-                    <div className="vault-card__author"></div>
-                  </div>
-                </div>
+              // Skeleton loaders
+              Array.from({ length: 12 }).map((_, i) => (
+                <BookCardSkeleton key={i} />
               ))
             ) : books.length > 0 ? (
               books.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))
-            ) : (
+            ) : !booksError && (
+              // Empty State
               <div className="vault-empty">
-                <p>No books found matching your filters.</p>
-                <div className="vault-empty__actions">
-                  <button onClick={clearAll} className="vault-empty__clear">
-                    Clear all filters
+                <div className="vault-empty__icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                </div>
+                <h3 className="vault-empty__title">This is a rare combination.</h3>
+                <p className="vault-empty__text">
+                  Your request is specific. We can notify you the moment something qualifies.
+                </p>
+
+                {isPaid && totalActive > 0 && (
+                  <button
+                    type="button"
+                    className="vault-empty__notify"
+                    onClick={() => setShowNotifyModal(true)}
+                  >
+                    Notify me when this exists
                   </button>
-                  {totalActive > 0 && (
+                )}
+
+                <div className="vault-empty__actions">
+                  {filters.include.length > 0 && (
                     <button
-                      onClick={() => setShowShareModal(true)}
-                      className="vault-empty__share"
+                      onClick={() => {
+                        const newInclude = [...filters.include];
+                        newInclude.pop();
+                        setFilters({ include: newInclude });
+                      }}
+                      className="vault-empty__action"
                     >
-                      Share this search
+                      Remove one filter
                     </button>
                   )}
+                  <button onClick={clearAll} className="vault-empty__action">
+                    Clear all
+                  </button>
+                  <button
+                    onClick={() => setShowShareModal(true)}
+                    className="vault-empty__action vault-empty__action--share"
+                  >
+                    Share this search
+                  </button>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Pagination */}
+          {!booksLoading && !booksError && totalPages > 1 && (
+            <div className="vault-pagination">
+              <button
+                className="vault-pagination__btn"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+                Prev
+              </button>
+              <span className="vault-pagination__info">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                className="vault-pagination__btn"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+              >
+                Next
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </button>
+            </div>
+          )}
         </main>
       </div>
+
+      {/* Notify Me Modal */}
+      {showNotifyModal && (
+        <div className="vault-modal-overlay" onClick={() => setShowNotifyModal(false)}>
+          <div className="vault-modal vault-modal--notify" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="vault-modal__close"
+              onClick={() => setShowNotifyModal(false)}
+              aria-label="Close"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <h2 className="vault-modal__title">Get notified</h2>
+            <p className="vault-modal__text">
+              We'll email you when a book matching these {totalActive} filter{totalActive === 1 ? '' : 's'} is added to the vault.
+            </p>
+            <input
+              type="email"
+              className="vault-modal__input"
+              placeholder="your@email.com"
+              value={notifyEmail}
+              onChange={(e) => setNotifyEmail(e.target.value)}
+              disabled={notifyLoading}
+            />
+            {notifyError && (
+              <p className="vault-modal__error">{notifyError}</p>
+            )}
+            <div className="vault-modal__actions">
+              <button
+                className="vault-modal__dismiss"
+                onClick={() => setShowNotifyModal(false)}
+                disabled={notifyLoading}
+              >
+                Cancel
+              </button>
+              <button
+                className="vault-modal__cta"
+                onClick={async () => {
+                  if (!notifyEmail.trim()) return;
+                  setNotifyLoading(true);
+                  setNotifyError(null);
+                  try {
+                    // Build filter URL for the alert
+                    const filterUrl = window.location.search;
+                    const res = await fetch('/api/alerts', {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        email: notifyEmail,
+                        filterUrl,
+                        filterJson: { include: filters.include, exclude: filters.exclude, safety: filters.safety },
+                        name: `${totalActive} filter${totalActive === 1 ? '' : 's'}`,
+                      }),
+                    });
+                    if (!res.ok) throw new Error('Failed to create alert');
+                    setShowNotifyModal(false);
+                    setNotifyEmail('');
+                    setNotifySuccess(true);
+                    setTimeout(() => setNotifySuccess(false), 3000);
+                  } catch (err: any) {
+                    setNotifyError(err.message || 'Something went wrong');
+                  } finally {
+                    setNotifyLoading(false);
+                  }
+                }}
+                disabled={!notifyEmail.trim() || notifyLoading}
+              >
+                {notifyLoading ? 'Setting up...' : 'Notify me'}
+              </button>
+            </div>
+            <p className="vault-modal__hint">One email per match. Unsubscribe anytime.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Notify Success Toast */}
+      {notifySuccess && (
+        <div className="vault-toast">
+          Alert set. We'll email you when matching books are added.
+        </div>
+      )}
 
       {/* Upgrade Modal */}
       {showUpgradeModal && (

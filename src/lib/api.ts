@@ -139,7 +139,10 @@ export async function getVaultTags(): Promise<VaultTagsResponse> {
 
 export type GetBooksParams = {
   q?: string;
-  tags?: string[]; // slugs
+  tags?: string[];        // include tags (slugs)
+  excludeTags?: string[]; // exclude tags (slugs)
+  df?: string[];          // derived flags (noCheating, noCliffhanger, etc.)
+  sort?: string;          // newest, recommended, title, etc.
   page?: number;
   pageSize?: number;
 };
@@ -150,6 +153,13 @@ export async function getBooks(params: GetBooksParams = {}): Promise<BooksListRe
   if (params.tags && params.tags.length > 0) {
     url.searchParams.set("tags", params.tags.join(","));
   }
+  if (params.excludeTags && params.excludeTags.length > 0) {
+    url.searchParams.set("excludeTags", params.excludeTags.join(","));
+  }
+  if (params.df && params.df.length > 0) {
+    url.searchParams.set("df", params.df.join(","));
+  }
+  if (params.sort) url.searchParams.set("sort", params.sort);
   if (params.page) url.searchParams.set("page", String(params.page));
   if (params.pageSize) url.searchParams.set("pageSize", String(params.pageSize));
 
