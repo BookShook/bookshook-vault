@@ -20,7 +20,7 @@ interface FilterState {
   safety: string[];       // safety shield tag IDs
   kindleUnlimited: boolean;
   hiddenGemsOnly: boolean;
-  sort: 'newest' | 'grovel' | 'regret_low' | 'heat';
+  sort: 'newest' | 'recommended' | 'title';
 }
 
 interface Preset {
@@ -608,6 +608,9 @@ export default function BooksPage() {
   // Search pending indicator
   const [searchPending, setSearchPending] = useState(false);
 
+  // Retry counter to force refetch
+  const [retryCount, setRetryCount] = useState(0);
+
   // Handle premium click - show modal on standalone, use Ghost portal on bookshook.com
   const handlePremiumClick = useCallback(() => {
     if (window.location.hostname.includes('bookshook.com')) {
@@ -620,14 +623,16 @@ export default function BooksPage() {
   // Debounced search
   const [searchInput, setSearchInput] = useState(filters.query);
   useEffect(() => {
-    if (searchInput !== filters.query) {
+    // Only show pending if input differs from current filter
+    const differs = searchInput !== filters.query;
+    if (differs) {
       setSearchPending(true);
     }
     const timeout = setTimeout(() => {
-      if (searchInput !== filters.query) {
+      if (differs) {
         setFilters({ query: searchInput });
-        setSearchPending(false);
       }
+      setSearchPending(false);
     }, 300);
     return () => clearTimeout(timeout);
   }, [searchInput, filters.query, setFilters]);
@@ -689,7 +694,7 @@ export default function BooksPage() {
         setBooksError(err.message || 'Failed to load books');
         setBooksLoading(false);
       });
-  }, [filters.query, filters.include, filters.exclude, filters.safety, filters.sort, currentPage, tagById]);
+  }, [filters.query, filters.include, filters.exclude, filters.safety, filters.sort, currentPage, tagById, retryCount]);
 
   // Count filters in category
   const countCategoryFilters = useCallback((categorySlug: string) => {
@@ -1049,7 +1054,7 @@ export default function BooksPage() {
           {booksError && !booksLoading && (
             <div className="vault-error-state">
               <p>Something went wrong loading books.</p>
-              <button onClick={() => setCurrentPage(1)} className="vault-error-state__retry">
+              <button onClick={() => setRetryCount(c => c + 1)} className="vault-error-state__retry">
                 Try again
               </button>
             </div>
@@ -1192,8 +1197,8 @@ export default function BooksPage() {
                   setNotifyLoading(true);
                   setNotifyError(null);
                   try {
-                    // Build filter URL for the alert
-                    const filterUrl = window.location.search;
+                    // Build filter URL for the alert (full URL including hash for HashRouter)
+                    const filterUrl = window.location.href;
                     const res = await fetch('/api/alerts', {
                       method: 'POST',
                       credentials: 'include',
